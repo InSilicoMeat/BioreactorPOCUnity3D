@@ -2,6 +2,7 @@
 Show animation from VTK files produced by ABM-Microcarriers model
 
 Requires the folder of data created by running the ABM-Microcarriers model using biocellion.
+NOTE: Must tack on the suffix .bytes to all files in that directory due to Unity's insistence that a rose is NOT a rose by any other name.
 
 Two possibilities for ingesting that data by the DataReader script:
 
@@ -9,7 +10,7 @@ Two possibilities for ingesting that data by the DataReader script:
 
    DataPath = "/Users/simonkahan/CMMC POC/Assets/Resources/output60b/";
 
-2. In addition to running on your own computer, you'd like to install the binary elsewhere, say, as a web demo on simmer.io. You can set DataReader::data_files_are_external to false, import the directory using the unity editor into Resources, and set the name of that directory in the second branch of the DataReader::Start, as in
+2. In addition to running on your own computer, you'd like to install the binary elsewhere, say, as a web demo on simmer.io. You can set DataReader::data_files_are_external to false, import the directory (here called output60b) using the unity editor into Resources, and set the name of that directory in the second branch of the DataReader::Start, as in
 
    DataPath = Application.dataPath + "/Resources/" + "output60b" + "/";  
    \_all_files = Resources.LoadAll<TextAsset>("output60b");
