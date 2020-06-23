@@ -30,6 +30,8 @@ using System.Text.RegularExpressions;
 // The Float64 data is in Little Endian format and is preceded by the _ character.
 // To accelerate file processing, we have partitioned the vtp files into a vtp.txt file containing
 // the xml header information and a vtp.data.bytes file containing the raw data beginning with _.
+// A script for splitting the files is in https://github.com/InSilicoMeat/Utilities-split-vtp-files
+//
 public class DataReader : MonoBehaviour
 {
     public GameObject Cell, Microcarrier;
@@ -49,7 +51,9 @@ public class DataReader : MonoBehaviour
     TextAsset[] _pvtp_assets; //used when data files are internal
     Dictionary<string, TextAsset> _textAssetD;
 
-    Dictionary<Int32, GameObject> _objects = new Dictionary<Int32, GameObject>();
+    Dictionary<int, GameObject> _objects = new Dictionary<int, GameObject>();
+    Dictionary<int, Vector3> _velocities = new Dictionary<int, Vector3>();
+    List<int> _microcarriers = new List<int>();
 
     // Start is called before the first frame update
     void Start()
@@ -89,6 +93,8 @@ public class DataReader : MonoBehaviour
                     _frame_number = 0;
                     foreach (GameObject go in _objects.Values) Destroy(go);
                     _objects.Clear();
+                    _velocities.Clear();
+                    _microcarriers.Clear();
                 }
             }
             while (_timer * FrameRate > 1);
@@ -103,6 +109,7 @@ public class DataReader : MonoBehaviour
 
         string line;
         int color_offset = 0, radius_offset = 0, stress_offset = 0, id_offset = 0, point_offset = 0;
+        int vx_offset = 0, vy_offset = 0, vz_offset = 0;
         List<TextAsset> vtp_assets;
         List<TextAsset> vtp_data_assets;
 
@@ -138,50 +145,69 @@ public class DataReader : MonoBehaviour
             TextAsset vtp_data_asset = vtp_data_assets[vid];
 
             int num_points = 0;
-            s = System.Text.Encoding.Default.GetString(vtp_asset.bytes);
+            //s = System.Text.Encoding.Default.GetString(vtp_asset.bytes);
+            s = vtp_asset.ToString();
             const string regex = "\"([^\"]*)\""; //quoted items
 
             lines = Regex.Split(s, "\n|\r|\r\n");
-
             for (int i = 0; i < lines.Length; i++)
             {
                 line = lines[i];
+                Debug.Log(line);
                 if (line.Contains("NumberOfPoints"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    //Debug.Log(line + ":" + co[0].Value.Replace("\"", ""));
+                    Debug.Log(line + ":" + co[0].Value.Replace("\"", ""));
                     num_points = Int32.Parse(co[0].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("color"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     color_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("radius"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     radius_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("stress"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     stress_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("id"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     id_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("NumberOfComponents"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     point_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                     break;
+                }
+                else if (line.Contains("vx"))
+                {
+                    MatchCollection co = Regex.Matches(line, regex);
+                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    vx_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
+                }
+                else if (line.Contains("vy"))
+                {
+                    MatchCollection co = Regex.Matches(line, regex);
+                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    vy_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
+                }
+                else if (line.Contains("vz"))
+                {
+                    MatchCollection co = Regex.Matches(line, regex);
+                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    vz_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
             }
 
@@ -189,17 +215,23 @@ public class DataReader : MonoBehaviour
 
             byte[] b = vtp_data_asset.bytes;
 
+            if (Convert.ToChar(b[0]) != '_') Debug.Log("DataReader misalignment at 1");
+
             int c_file_posn = 5 + color_offset;
             int r_file_posn = 5 + radius_offset;
             int i_file_posn = 5 + id_offset;
             int p_file_posn = 5 + point_offset;
             int s_file_posn = 5 + stress_offset;
+            int vx_file_posn = 5 + vx_offset;
+            int vy_file_posn = 5 + vy_offset;
+            int vz_file_posn = 5 + vz_offset;
 
             // An assumption is that an object whose id is less than the number of
             //   agents already added to the scene must already be in the scene.
             for (int i = 0; i < num_points; i++)
             {
                 int id = Convert.ToInt32(BitConverter.ToDouble(b, i_file_posn)); i_file_posn += 8;
+                // biocellion's (x, y, z) is Unity's (z, x, y)
                 double z = BitConverter.ToDouble(b, p_file_posn) / 1000 - 27.5; p_file_posn += 8;
                 double x = BitConverter.ToDouble(b, p_file_posn) / 1000 - 27.5; p_file_posn += 8;
                 double y = BitConverter.ToDouble(b, p_file_posn) / 1000; p_file_posn += 8;
@@ -208,6 +240,11 @@ public class DataReader : MonoBehaviour
                 int c = Convert.ToInt32(BitConverter.ToDouble(b, c_file_posn)); c_file_posn += 8;
                 double stress = Math.Abs(BitConverter.ToDouble(b, s_file_posn)); s_file_posn += 8;
                 stress = stress / (half_stress + stress);
+                // biocellion's (vx, vy, vz) is Unity's (vz, vx, vy)
+                float vz = Convert.ToSingle(BitConverter.ToDouble(b, vx_file_posn))/1000;  vx_file_posn += 8;
+                float vx = Convert.ToSingle(BitConverter.ToDouble(b, vy_file_posn))/1000; vy_file_posn += 8;
+                float vy = Convert.ToSingle(BitConverter.ToDouble(b, vz_file_posn))/1000; vz_file_posn += 8;
+                Vector3 v = new Vector3(vx, vy, vz);
 
                 bool exists = _objects.TryGetValue(id, out GameObject obj);
                 if (exists)
@@ -215,15 +252,20 @@ public class DataReader : MonoBehaviour
                     //can we compare type to expected type? if originally a cell is this still a cell?
                     obj.transform.position = p;
                     obj.transform.localScale = new Vector3(r, r, r);
-
+                    _velocities[id] = v;
                 }
                 else
                 {
                     //Debug.Log("Add " + (c==1? "cell":"microcarrier") + " at " + p);
                     if (c == 1) obj = Instantiate(Cell, p, Quaternion.identity);
-                    else obj = Instantiate(Microcarrier, p, Quaternion.identity);
+                    else
+                    {
+                        obj = Instantiate(Microcarrier, p, Quaternion.identity);
+                        _microcarriers.Add(id); //the biocellion id of microcarrier doesn't matter
+                    }
                     obj.transform.localScale = new Vector3(r, r, r);
                     _objects.Add(id, obj);
+                    _velocities.Add(id, v);
                 }
                 if (c == 1) //color only the cells, not the microcarriers
                 {
@@ -234,5 +276,18 @@ public class DataReader : MonoBehaviour
             }
             // unload the assets
         }
+    }
+    public Vector3 MicrocarrierPosition(int n)
+    {
+        int i = n % _microcarriers.Count;
+        int id = _microcarriers[i];
+        return _objects[id].transform.position;
+    }
+    public Vector3 MicrocarrierVelocity(int n)
+    {
+        int i = n % _microcarriers.Count;
+        int id = _microcarriers[i];
+        return _velocities[id];
+
     }
 }

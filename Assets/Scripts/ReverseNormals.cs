@@ -30,6 +30,6 @@ public class ReverseNormals : MonoBehaviour
             }
         }
 
-        this.GetComponent<MeshCollider>().sharedMesh = filter.mesh;
+        //this.GetComponent<MeshCollider>().sharedMesh = filter.mesh;
     }
 }

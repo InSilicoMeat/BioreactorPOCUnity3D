@@ -12,10 +12,11 @@ public class collide : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("contact");
+
         foreach (ContactPoint contact in collision.contacts)
         {
-            Debug.DrawRay(contact.point, contact.normal, Color.white);
+            // Debug.DrawRay(contact.point, contact.normal, Color.red);
+            Debug.Log("contact "+contact.point);
         }
 
         //if (collision.relativeVelocity.magnitude > 2)
