@@ -105,7 +105,7 @@ public class DataReader : MonoBehaviour
     void ProcessNextAsset()
     {
         if (_num_frames < 1) return;
-        Debug.Log("Processing file " + _pvtp_assets[_frame_number].name + " for frame " + _frame_number + "\n");
+        //Debug.Log("Processing file " + _pvtp_assets[_frame_number].name + " for frame " + _frame_number + "\n");
 
         string line;
         int color_offset = 0, radius_offset = 0, stress_offset = 0, id_offset = 0, point_offset = 0;
@@ -153,60 +153,60 @@ public class DataReader : MonoBehaviour
             for (int i = 0; i < lines.Length; i++)
             {
                 line = lines[i];
-                Debug.Log(line);
+                //Debug.Log(line);
                 if (line.Contains("NumberOfPoints"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    Debug.Log(line + ":" + co[0].Value.Replace("\"", ""));
+                    //Debug.Log(line + ":" + co[0].Value.Replace("\"", ""));
                     num_points = Int32.Parse(co[0].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("color"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     color_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("radius"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     radius_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("stress"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     stress_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("id"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     id_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("NumberOfComponents"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     point_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                     break;
                 }
                 else if (line.Contains("vx"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     vx_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("vy"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     vy_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
                 else if (line.Contains("vz"))
                 {
                     MatchCollection co = Regex.Matches(line, regex);
-                    Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
+                    //Debug.Log(line + ":" + co[3].Value.Replace("\"", ""));
                     vz_offset = Int32.Parse(co[3].Value.Replace("\"", ""));
                 }
             }
@@ -289,5 +289,13 @@ public class DataReader : MonoBehaviour
         int id = _microcarriers[i];
         return _velocities[id];
 
+    }
+    public int MicrocarrierCount()
+    {
+        return _microcarriers.Count;
+    }
+    public int CellCount()
+    {
+        return _objects.Count - _microcarriers.Count;
     }
 }

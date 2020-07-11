@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
+using TMPro;
 public class CameraController : MonoBehaviour
 {
 
@@ -31,12 +33,14 @@ public class CameraController : MonoBehaviour
     bool _focused = false;
     int _microcarrier_id = 0;
     float _lag_distance;
+    Vector3 _mv;
 
     bool _paused = false;
     Spin _spin;
     DataReader _dataReader;
     float _saved_RPM;
     float _saved_FrameRate;
+    public float damping;
 
     private void Start()
     {
@@ -44,33 +48,20 @@ public class CameraController : MonoBehaviour
         _spin = GameObject.Find("StirRod").GetComponent<Spin>();
         _dataReader = GameObject.Find("DataReader").GetComponent<DataReader>();
         _lag_distance = nominal_lag_distance;
-  
+        damping = 1f;
+        //_canvases = FindObjectsOfType<Canvas>();
+        //ToggleMenu();
     }
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.H))
         {
-            transform.position = new Vector3(-1000.0f, 27.6f, 0.4f);
-            transform.eulerAngles = new Vector3(0f, 90f, 0f);
-            _focused = false;
+            Home();
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (_paused)
-            {
-                _paused = false;
-                _spin.RPM = _saved_RPM;
-                _dataReader.FrameRate = _saved_FrameRate;
-            }
-            else
-            {
-                _paused = true;
-                _saved_RPM = _spin.RPM;
-                _spin.RPM = 0f;
-                _saved_FrameRate = _dataReader.FrameRate;
-                _dataReader.FrameRate = 0f;
-            }
+            TogglePause();
         }
         if (Input.GetKeyDown(KeyCode.Minus))
         {
@@ -85,21 +76,23 @@ public class CameraController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F))
         {
-            _focused = true;
-            _microcarrier_id++;
+            Focus();
+
         }
 
         if (Input.GetKeyDown(KeyCode.U))
         {
-            _focused = false;
-            _lag_distance = nominal_lag_distance;
+            UnFocus();
         }
 
         if (_focused)
         {
             Vector3 mp = _dataReader.MicrocarrierPosition(_microcarrier_id);
-            Vector3 mv = _dataReader.MicrocarrierVelocity(_microcarrier_id);
-            transform.position = mp - mv.normalized * _lag_distance;
+            Vector3 new_mv = _dataReader.MicrocarrierVelocity(_microcarrier_id);
+
+            _mv = (_mv * damping + new_mv.normalized) / (damping + 1);
+
+            transform.position = mp - (_mv.normalized * _lag_distance);
             transform.LookAt(mp);
             if (Input.GetKeyDown(KeyCode.W))
             {
@@ -181,5 +174,76 @@ public class CameraController : MonoBehaviour
             p_Velocity += new Vector3(1, 0, 0);
         }
         return p_Velocity;
+    }
+
+    /*
+    bool _menu_displayed = true;
+    private Canvas[] _canvases;
+    public void ToggleMenu()
+    {
+        if (_menu_displayed)
+        {
+            foreach (Canvas c in _canvases) {
+                if (c.name != "MenuCanvas") c.gameObject.SetActive(false);
+            }
+            _menu_displayed = false;
+        }
+        else
+        {
+            foreach (Canvas c in _canvases)
+            {
+                c.gameObject.SetActive(true);
+            }
+            _menu_displayed = true;
+        }
+    }
+    */
+    public void SpeedUp()
+    {
+
+    }
+    public void TogglePause()
+    {
+        if (_paused)
+        {
+            _paused = false;
+            _spin.RPM = _saved_RPM;
+            _dataReader.FrameRate = _saved_FrameRate;
+        }
+        else
+        {
+            _paused = true;
+            _saved_RPM = _spin.RPM;
+            _spin.RPM = 0f;
+            _saved_FrameRate = _dataReader.FrameRate;
+            _dataReader.FrameRate = 0f;
+        }
+    }
+    public void Home()
+    {
+        transform.position = new Vector3(-1000.0f, 27.6f, 0.4f);
+        transform.eulerAngles = new Vector3(0f, 90f, 0f);
+        _focused = false;
+    }
+    public void ToggleFocus()
+    {
+        Debug.Log("toggle focus");
+        if (_focused) UnFocus(); else Focus();
+    }
+    void Focus()
+    {
+        Debug.Log("focus");
+        _focused = true;
+        _microcarrier_id++;
+    }
+    void UnFocus()
+    {
+        Debug.Log("unfocus");
+        _focused = false;
+        _lag_distance = nominal_lag_distance;
+    }
+    void BackAway()
+    {
+        _lag_distance /= 2;
     }
 }
