@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<VTKFile type="PolyData" version="1.0" byte_order="LittleEndian">
+<PolyData>
+<Piece NumberOfPoints="4600" NumberOfVerts="0" NumberOfStrips="0" NumberOfPolys="0">
+<PointData>
+<DataArray type="Float64" Name="color" format="appended" offset="0"/>
+<DataArray type="Float64" Name="radius" format="appended" offset="36804"/>
+<DataArray type="Float64" Name="stress" format="appended" offset="73608"/>
+<DataArray type="Float64" Name="id" format="appended" offset="110412"/>
+<DataArray type="Float64" Name="vx" format="appended" offset="147216"/>
+<DataArray type="Float64" Name="vy" format="appended" offset="184020"/>
+<DataArray type="Float64" Name="vz" format="appended" offset="220824"/>
+</PointData>
+<Points>
+<DataArray type="Float64" NumberOfComponents="3" format="appended" offset="257628"/>
+</Points>
+<Verts>
+<DataArray/>
+</Verts>
+<Lines>
+<DataArray/>
+</Lines>
+<Strips>
+<DataArray/>
+</Strips>
+<Polys>
+<DataArray/>
+</Polys>
+</Piece>
+</PolyData>
+<AppendedData encoding="raw">
