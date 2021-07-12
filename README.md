@@ -1,4 +1,7 @@
 # BioreactorPOCUnity3D
+
+This software is under copyright of the CMMC and no license is offered at the moment. It is used for the Proof of Concept and GFI bioreactor project by the [CMMC](thecmmc.org).
+
 Show animation from VTK files produced by ABM-Microcarriers model
 
 Requires the folder of data created by running the ABM-Microcarriers model using biocellion.
